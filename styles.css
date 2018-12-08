@@ -1,0 +1,39 @@
+body {
+    font-family: 'Teko', sans-serif;
+}
+
+h1, h2 {
+    font-family: 'Baloo Bhaijaan', cursive;
+}
+
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+th > span {
+    cursor: pointer;
+}
+td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+td > input, td > select {
+}
+
+td > textarea {
+    margin-top: 5px;
+}
+
+textarea {
+    height: 1em;
+    width: 100px;
+    transition: all 0.5s ease;
+}
+
+textarea:focus {
+    height: 5em;
+    width: 500px;
+}

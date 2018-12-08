@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shattered Database</title>
+    <link href="https://fonts.googleapis.com/css?family=Baloo+Bhaijaan|Teko:300" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h1><em>Shattered</em> Database</h1>
+    <div id="app">
+        <h2>Units</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th v-for="attribute in unitAttributes" scope="col">
+                        <span @click="orderDirectly(attribute)">{{ makeReadable(attribute.name) }}</span>
+                    </th>
+                </tr>
+                <tr>
+                    <td v-for="attribute in unitAttributes">
+                        <select v-if="getType(attribute.name) === 'archetype'"
+                                @change="addFilter(attribute)"
+                                class="filter"
+                                :id="'filter_units_' + attribute.name">
+                            <option v-show="false">---filter---</option>
+                            <option v-for="option in unitArchetypes">
+                                {{ option }}
+                            </option>
+                        </select>
+                        <select v-else-if="getType(attribute.name) === 'stat'"
+                                @change="addFilter(attribute)"
+                                class="filter"
+                                :id ="'filter_units_' + attribute.name">
+                            <option v-show="false">---filter---</option>
+                            <option v-for="option in unitStats">
+                                {{ option }}
+                            </option>
+                        </select>
+                        <select v-else-if="getType(attribute.name) === 'attackRangeStat'"
+                                @change="addFilter(attribute)"
+                                class="filter"
+                                :id ="'filter_units_' + attribute.name">
+                            <option v-show="false">---filter---</option>
+                            <option v-for="option in unitAttackRangeStats">
+                                {{ option }}
+                            </option>
+                        </select>
+                        <input v-else placeholder="Search..."
+                               @keypress.enter="addFilter(attribute)"
+                               class="search
+"
+                               :id="'filter_units_' + attribute.name">
+                    </td>
+                    <td>
+                        <button @click="reset()">Reset</button>
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="unit in units">
+                    <td v-for="(value, key) in unit" v-if="!unitHiddenAttributes.includes(key)">
+                        <span v-if="!unit.editUnit">{{ value }}</span>
+                        <select v-else-if="getType(key) === 'archetype'" :id="'edit_unit_' + key + unit.id">
+                            <option v-show="false"></option>
+                            <option v-for="option in unitArchetypes" :selected="isSelected(unit[key], option)">
+                                {{ option }}
+                            </option>
+                        </select>
+                        <select v-else-if="getType(key) === 'stat'" :id ="'edit_unit_' + key + unit.id">
+                            <option v-show="false"></option>
+                            <option v-for="option in unitStats" :selected="isSelected(unit[key], option)">
+                                {{ option }}
+                            </option>
+                        </select>
+                        <select v-else-if="getType(key) === 'attackRangeStat'" :id ="'edit_unit_' + key + unit.id">
+                            <option v-show="false"></option>
+                            <option v-for="option in unitAttackRangeStats" :selected="isSelected(unit[key], option)">
+                                {{ option }}
+                            </option>
+                        </select>
+                        <textarea v-else-if="getType(key) === 'text'" :id ="'edit_unit_' + key + unit.id">
+                            {{ value }}
+                        </textarea>
+                        <input v-else :value="value" :id ="'edit_unit_' + key + unit.id">
+                    </td>
+                    <td>
+                        <button v-if="!unit.editUnit" @click="editUnit(unit)">Edit</button>
+                        <button v-else @click="saveUnit(unit)">Save</button>
+                        <button @click="deleteUnit(unit)">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>Add unit</h3>
+        <form @submit.prevent="addUnit">
+            <div v-for="attribute in unitAttributes">
+                <label>{{ makeReadable(attribute.name) }}
+                    <select v-if="attribute.type == 'archetype'" :id="'add_unit_' + attribute.name">
+                        <option v-show="false"></option>
+                        <option v-for="option in unitArchetypes">{{ option }}</option>
+                    </select>
+                    <select v-else-if="attribute.type == 'stat'" :id="'add_unit_' + attribute.name">
+                        <option v-show="false"></option>
+                        <option v-for="option in unitStats">{{ option }}</option>
+                    </select>
+                    <select v-else-if="attribute.type == 'attackRangeStat'" :id="'add_unit_' + attribute.name">
+                        <option v-show="false"></option>
+                        <option v-for="option in unitAttackRangeStats">{{ option }}</option>
+                    </select>
+                    <textarea v-else-if="attribute.type == 'text'" :id="'add_unit_' + attribute.name"></textarea>
+                    <input v-else :id="'add_unit_' + attribute.name">
+                </label>
+            </div>
+            <button type="submit">Add</button>
+        </form>
+        <h2>Abilities</h2>
+        <ul>
+            <li v-for="(ability, index) in abilities">
+                <ul v-if="!ability.editAbility">
+                    <li>Name: {{ ability.name }}</li>
+                    <li>Effect: {{ ability.effect }}</li>
+                    <button @click="editAbility(ability)">Edit</button>
+                    <button @click="deleteAbility(ability, index)">Delete</button>
+                </ul>
+                <ul v-else>
+                    <li>
+                        <label for="editAbilityName">Name</label>
+                        <input :value="ability.name" @keypress.enter="saveAbility(ability)" id="editAbilityName">
+                    </li>
+                    <li>
+                        <label for="editAbilityEffect">Effect</label>
+                        <input :value="ability.effect" @keypress.enter="saveAbility(ability)" id="editAbilityEffect">
+                    </li>
+                    <button @click="saveAbility(ability)">Save</button>
+                    <button @click="deleteAbility(ability, index)">Delete</button>
+                </ul>
+            </li>
+        </ul>
+        <h3>Add ability</h3>
+        <form @submit.prevent="addAbility">
+            <label for="addAbilityName">Name</label>
+            <input id="addAbilityName">
+            <label for="addAbilityEffect">Effect</label>
+            <input id="addAbilityEffect">
+            <button type="submit">Add</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
